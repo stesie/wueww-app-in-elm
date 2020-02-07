@@ -110,6 +110,11 @@ view model =
                                             , text session.title
                                             ]
                                         ]
+                                    , if isExpanded then
+                                        div [ A.class "extra content" ] [ div [ A.class "description" ] [ text "additional text" ] ]
+
+                                      else
+                                        text ""
                                     ]
                             )
                             sessions
