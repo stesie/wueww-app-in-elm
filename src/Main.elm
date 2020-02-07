@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Html
+import Html exposing (..)
 import Http
 import Json.Decode as D
 
@@ -54,9 +54,16 @@ update msg model =
 
 
 view : Model -> Browser.Document Msg
-view _ =
+view model =
     { title = "Hello World"
-    , body = [ Html.div [] [ Html.text "Hello World" ] ]
+    , body =
+        [ case model.sessions of
+            Nothing ->
+                text "Daten werden geladen ..."
+
+            Just sessions ->
+                ul [] (List.map (\session -> li [] [ text session.title ]) sessions)
+        ]
     }
 
 
