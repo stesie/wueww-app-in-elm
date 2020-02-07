@@ -3,22 +3,28 @@ module Main exposing (main)
 import Browser
 import Html exposing (..)
 import Html.Attributes as A
+import Html.Events as E
 import Http
 import Json.Decode as D
+import List.Extra exposing (remove)
 
 
 type alias Model =
     { sessions : Maybe (List Session)
+    , expandedSessionIds : List Int
     }
 
 
 type alias Session =
-    { title : String
+    { id : Int
+    , title : String
     }
 
 
 type Msg
     = SetSessions (Result Http.Error (List Session))
+    | ExpandSession Int
+    | CollapseSession Int
 
 
 fetchSessions : Cmd Msg
@@ -34,14 +40,18 @@ sessionsFileDecoder =
     let
         sessionDecoder : D.Decoder Session
         sessionDecoder =
-            D.map Session (D.field "title" D.string)
+            D.map2 Session (D.field "id" D.int) (D.field "title" D.string)
     in
     D.field "sessions" (D.list sessionDecoder)
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { sessions = Nothing }, fetchSessions )
+    ( { sessions = Nothing
+      , expandedSessionIds = []
+      }
+    , fetchSessions
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -52,6 +62,12 @@ update msg model =
 
         SetSessions (Err _) ->
             ( model, Cmd.none )
+
+        ExpandSession id ->
+            ( { model | expandedSessionIds = id :: model.expandedSessionIds }, Cmd.none )
+
+        CollapseSession id ->
+            ( { model | expandedSessionIds = remove id model.expandedSessionIds }, Cmd.none )
 
 
 view : Model -> Browser.Document Msg
@@ -67,9 +83,32 @@ view model =
                     [ div [ A.class "ui doubling two cards" ]
                         (List.map
                             (\session ->
+                                let
+                                    isExpanded =
+                                        List.member session.id model.expandedSessionIds
+
+                                    chevronDirection =
+                                        if isExpanded then
+                                            "down"
+
+                                        else
+                                            "right"
+                                in
                                 div [ A.class "ui card" ]
                                     [ div [ A.class "content" ]
-                                        [ div [ A.class "header " ] [ text session.title ]
+                                        [ div
+                                            [ A.class "header"
+                                            , E.onClick
+                                                (if isExpanded then
+                                                    CollapseSession session.id
+
+                                                 else
+                                                    ExpandSession session.id
+                                                )
+                                            ]
+                                            [ span [ A.class "right floated" ] [ i [ A.class "chevron icon", A.class chevronDirection ] [] ]
+                                            , text session.title
+                                            ]
                                         ]
                                     ]
                             )
