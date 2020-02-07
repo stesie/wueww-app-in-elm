@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Html exposing (..)
+import Html.Attributes as A
 import Http
 import Json.Decode as D
 
@@ -62,7 +63,19 @@ view model =
                 text "Daten werden geladen ..."
 
             Just sessions ->
-                ul [] (List.map (\session -> li [] [ text session.title ]) sessions)
+                div [ A.class "ui container body" ]
+                    [ div [ A.class "ui doubling two cards" ]
+                        (List.map
+                            (\session ->
+                                div [ A.class "ui card" ]
+                                    [ div [ A.class "content" ]
+                                        [ div [ A.class "header " ] [ text session.title ]
+                                        ]
+                                    ]
+                            )
+                            sessions
+                        )
+                    ]
         ]
     }
 
