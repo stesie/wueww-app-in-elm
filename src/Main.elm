@@ -18,6 +18,13 @@ type alias Model =
 type alias Session =
     { id : Int
     , title : String
+    , description : Description
+    }
+
+
+type alias Description =
+    { long : String
+    , short : Maybe String
     }
 
 
@@ -35,12 +42,19 @@ fetchSessions =
         }
 
 
+descriptionDecoder : D.Decoder Description
+descriptionDecoder =
+    D.map2 Description
+        (D.field "long" D.string)
+        (D.maybe (D.field "short" D.string))
+
+
 sessionsFileDecoder : D.Decoder (List Session)
 sessionsFileDecoder =
     let
         sessionDecoder : D.Decoder Session
         sessionDecoder =
-            D.map2 Session (D.field "id" D.int) (D.field "title" D.string)
+            D.map3 Session (D.field "id" D.int) (D.field "title" D.string) (D.field "description" descriptionDecoder)
     in
     D.field "sessions" (D.list sessionDecoder)
 
@@ -87,6 +101,14 @@ view model =
                                     isExpanded =
                                         List.member session.id model.expandedSessionIds
 
+                                    descriptionText =
+                                        case session.description.short of
+                                            Just value ->
+                                                value
+
+                                            Nothing ->
+                                                session.description.long
+
                                     chevronDirection =
                                         if isExpanded then
                                             "down"
@@ -110,6 +132,15 @@ view model =
                                             , text session.title
                                             ]
                                         ]
+                                    , if isExpanded then
+                                        div [ A.class "extra content" ]
+                                            [ div [ A.class "description" ]
+                                                [ text descriptionText
+                                                ]
+                                            ]
+
+                                      else
+                                        text ""
                                     ]
                             )
                             sessions
